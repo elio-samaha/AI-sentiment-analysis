@@ -1,0 +1,156 @@
+\section{Another type of representation, persistent homology}
+
+The problems with the methods above are: 1. Not considering the order/structure of sentences
+in a document; 2. having parameter (e.g. k in KNN, estimated distribution in Naive Bayes) to determine which can not be optimal uniformly for
+every prediction. For the sentiment prediction, it is fine. So we change our task 
+where we actually need to solve these problems.
+
+In this section, we introduce a method for analyzing a text
+without parameters. In fact, we consider all
+the thresholds ranging from 0 to infinity. Moreover, we want to be able to
+find a meaningful correspondence between the computation and
+the structure of the text. We use persistent homology.
+
+This is a project report instead of a course note, so the importance
+is not on the details of the algorithm but rather the ideas and experiments.
+But the algorithm and the theory in themselves are interesting and not
+easy to be found clearly on the internet, so for the clearness of the report
+we include concisely the necessary
+concepts and key algorithms there \ref{theoretical}.
+
+\subsection{Essay grading}
+
+Inherently, persistent homology is useful when it comes to 3d modeling.
+But in data analysis in general, it is also useful (e.g.\ analyze the
+performance of a basketball team and get an intuitive view of the team structure).
+
+Here we use the persistent homology to analyze discursive essays and grading (specifically the
+richness of their argument structures).
+
+Roughly speaking, a better discursive essay should have a
+richer writing structure, (a proposition should be discussed
+in different angles, the last paragraph echoes to the beginning etc.).
+For example,
+in Figure~\ref{apple}, on the right, the essay has a statement, and then some arguments,
+finally a conclusion.
+On the left, each point represents a sentence.
+1 - 2 - 3 - 4 are linked by time order, 1 - 4 are linked because they are similar (within a certain range of distance).
+This hole means a good argument. There are also filled triangles (2-simplices), those
+sentences form clusters, so they are filled instead of forming holes.
+
+\begin{figure}[H]
+  \begin{minipage}{0.80\textwidth}
+  \input{apple.tex}
+  \end{minipage}
+  \begin{minipage}{0.19\textwidth}
+  $\cdots$I like apple. It is healthy. It is yummy. So I eat an apple every day.
+  $\cdots$
+  \end{minipage}
+  \caption{There are 2 holes in this simplicial complex,
+  one represented by the blue cycle and one by brown.
+  Note that the brown cycle and the green cycle are homology equivalent, so they count as one.}
+  \label{apple}
+\end{figure}
+
+If we only have one such graph, we will have to determine the similarity threshold to link.
+However, different thresholds can give different insights. Structure changes with scale, e.g.\ Figure~\ref{fig:scale}.
+So our approach will consider all the scales (whence ``persistent'' homology).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=14cm]{scale.png}
+\caption{Structure changes with scale}
+\label{fig:scale}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\input{filtration.tex}
+\caption{We continue linking and filling (e.g.\ triangles) when the $d$ increases; note that
+we may have multiple linkings and fillings to do within a same $d$ but we discretize these
+for the algorithm}
+\label{filtration}
+\end{figure}
+
+The algorithm is the following (for the exact version \ref{sifts}) :
+
+We vary $d$ from $0$ to $1$, for every $d$ we create a graph like Figure~\ref{apple}
+(points representing sentences are linked first in order in the essay,
+then we link sentences whose differences are lower than $d$,
+we fill triangles, tetrahedrons, etc. as shown in Figure~\ref{filtration}) What we will get is
+$(V_d)_{0\le d\le 1}$, a filtration of graphes one included in another while $d$ increases.
+Then there are holes that appear and disappear, we count the number of total appearances of holes.
+
+We hope to show that this number of holes reflects the quality of arguments of an essay.
+
+\paragraph{Experiment on a real set of data}
+
+data source (more precisely, the essay set 2, which is discoursive) :
+\url{https://www.kaggle.com/datasets/thevirusx3/automated-essay-scoring-dataset/code?select=training_set_rel3.tsv}
+
+\begin{figure}[H]
+\begin{minipage}{0.49\linewidth}
+\includegraphics[width=8cm]{pdessay.png}
+\end{minipage}
+\begin{minipage}{0.49\linewidth}
+\begin{mdframed}
+In @DATE1's world, there are many things found offensive.  Everyone has their own opinion on what is offensive and what is not. Many parents are becoming upset because they think their children are viewing things that they should not.  Other people are upset because they think the libraries are offending their culture or way of life.  This is even taken to the extreme where people want censhorship on libraries to avoid this, which is wrong.     Some people are becoming concerned about the materials in libraries...($\sim$450 words)
+\end{mdframed}
+\end{minipage}
+\caption{The persistence diagram of an essay of grade 4/6 : A blue point $(x, y)$ in this diagram means
+that there is a hole appears at $d=x$ and disappears at $d=y$.
+One red point means there is only one connected component the whole time,
+because we link all the sentences by order in the essay.
+}
+\label{fig:pd}
+\end{figure}
+
+\input{gradesh.tex}
+
+Those are some discursive essays on the topic of offense/censorship graded 1-6. We first inspect
+an essay with a grade 4/6 as an example Figure~\ref{fig:pd}. Then we show
+the average number of holes for each grade (1-6)
+as well as the average number of holes for each grade (Figure~\ref{fig:ds}).
+We find that number of holes increases as the grade increases.
+
+But there are other factors other than the richness of structure of the essay that may affect
+the number of holes, like the number of sentences (if we have more points in the set
+we will have more chances to form holes) or the number of words.
+
+\begin{figure}[H]
+  \includegraphics[width=8cm]{gradesah1s.png}
+  \includegraphics[width=8cm]{gradesah1w.png}
+  \caption{The average of holes each sentence/word increases as grade increases (from 1 to 6, upper to lower histogram)}
+  \label{fig:ads}
+\end{figure}
+
+First, let's try to eliminate the effect of number of sentences/number of words
+by dividing it (Figure~\ref{fig:ads}). So as we expected, it still shows a simultaneous
+increase in the number of holes and grades. But even now we may suspect that
+maybe the number of holes is just the number of sentences squared. To show that
+this is not the case, we fix the number of sentences/the number of words in a range
+and inspect the number of holes.
+
+\input{ah1tables.tex}
+
+Seeing Figure~\ref{tab:gar}, we indeed observe and confirm the correlation of increase
+that we conjectured. However, the correlation is not absolute as we can constate.
+This is because we don't have enough data (for almost all contradictory data
+we have selected only one essay of that grade in that range) and other factors than the argument
+do affect the grade too (holes only show the structure of an essay, for which we
+chose to do the tests on discursive essays). Typically, the wording
+of essays of grade 3 but with 30-40 holes is bad and repetitive, which is
+probably the reason why they are graded not high.
+
+In conclusion, while in Figure~\ref{fig:ads} we have enough essays as examples with the default that
+the method(division) is not rigorously convincing, and in Figure~\ref{tab:gar} we don't
+have enough essays for each range though the method is solid, with them combined,
+we are confident that the number of holes of dim 1 is a good measure of the quality of
+argument structure of an essay. While we changed our task for applying
+this topological representation of text, this task can not be achieved by
+KNN or Naive Bayes either, because they would both totally ignore
+the structure of an essay.
+
+\paragraph{Further} We may provision studying the identification of the type
+of arguments (or in the previous case, type of comments) by exploiting persistent homology structure,
+trying higher dimensional persistent homology, etc. But our journey ends here.

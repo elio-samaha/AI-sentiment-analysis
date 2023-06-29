@@ -1,0 +1,550 @@
+\documentclass{article}
+\usepackage{mathtools}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{physics}
+\usepackage{stmaryrd}
+\usepackage{bbm}
+\usepackage{graphicx}
+\usepackage{adjustbox}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{angles, quotes}
+\usetikzlibrary{calc}
+\usepackage{pgfplots}
+\usepackage{minted}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+\usepackage{parskip}
+\usepackage{mdframed}
+\usepackage[margin=2cm]{geometry}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    }
+\usepackage{biblatex}
+\addbibresource{refs.bib}
+\usepackage{indentfirst}
+\setlength{\parindent}{0.5cm}
+\DeclareMathOperator{\Img}{Im}
+\DeclareMathOperator{\Com}{Com}
+\DeclareMathOperator{\End}{End}
+\DeclareMathOperator{\Ker}{Ker}
+\newtheorem{theorem}{Theoreme}
+\newtheorem*{corollary}{Corollary}
+\newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{example}{Exemple}
+\newtheorem{tactic}{Tactic}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\I}{\mathbb{I}}
+\renewcommand{\L}{\mathcal{L}}
+\newcommand{\Cn}{\mathscr{C}}
+\renewcommand{\P}{\mathbb{P}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\K}{\mathbb{K}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\RM}[1]{\paragraph{RM} #1}
+\DeclareMathOperator{\conv}{conv}
+\DeclareMathOperator{\id}{id}
+\title{Text Representation and Application}
+\author{SAMAHA Elio, MARIE Clément, XIA Tianxiang}
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+\section{Introduction - Motivation}
+We were given several datasets from the website \textit{https://www.trictrac.net/}, which sells a variety of board games. This website collects data for every article, such as reviews and grades posted by the users. Our task was to treat and analyze this data to gain valuable insights from it. One purpose was to classify these reviews and predict the sentiment (positive or negative).
+
+This is a real-world application as the company could automatically gain insight on products by correlating words with grades. Utilizing word vector representation and dimensionality reduction helps establish meaningful associations between words and the sentiment expressed in reviews. By exploring the represented space, the company could identify trends in customer preferences, potentially increasing sales.
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[t]{0.8\linewidth}
+    \centering
+    \includegraphics[width=0.8\linewidth]{tric_trac_pic.png}
+    \caption{Tric Trac webpage}
+    \vspace{0.5cm}
+    \label{fig:tric_trac_webpage}
+  \end{minipage}
+  
+  \begin{minipage}[t]{0.8\linewidth}
+    \centering
+    \includegraphics[width=1.2\linewidth]{tric_trac_df.png}
+    \caption{Tric Trac Dataframe}
+    \vspace{0.5cm}
+    \label{fig:tric_trac_dataframe}
+  \end{minipage}
+\end{figure}
+
+The features X represent the \textit{comment} column, and the target variable y is \textit{grade}. In this report, we aim to uncover valuable insights from these reviews and effectively capture and quantify the sentiments conveyed. We will discuss our methodology, data processing approaches, and the potential of our findings.
+
+\newpage
+\section{Descriptive statistics of the \textit{grades} feature}
+
+We are starting by looking at the grades data, since it will be the criterion to classify reviews as positive or negative.
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{hist_plot_count.png}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{dist_plot_count.png}
+  \end{minipage}
+  \caption{Grade distribution}
+\end{figure}
+
+On the histogram on the right plot, 
+we can notice that the majority of the grades are actually integers. Removing float numbers (or rounding to closest integer) could possibly simplify the model.
+On the left plot, we can notice that the majority of reviews are actually positive.
+
+It is cautious to already say it could introduce some challenges. Indeed, since grades are quite imbalanced, the model can become biased towards positive reviews. The model may tend to predict positive reviews more frequently, leading to lower accuracy for negative ones and an overall imbalance in predictions. Also, since there are fewer samples from negative reviews, the model may not have enough representative examples to learn the patterns and characteristics of the negative class.
+
+\section{Text documents to vectors}
+
+Text documents, in their raw form, consist of unstructured data that cannot be directly processed by machine learning algorithms. To effectively analyze and derive insights from text, it is necessary to transform the textual information into a numerical representation known as vectors because they provide a structured and quantifiable representation of textual information.
+
+Therefore, since the features of the dataset represent the \textit{comment} feature, we will tackle ways to treat the data.
+\subsection{Preprocessing}
+
+Raw text data might contain unwanted or unimportant text due to which our results might not give efficient accuracy, and might make it hard to understand and analyze. So, proper pre-processing must be done on raw data.
+
+We had to remove punctuation, URLs, numbers, accents, stopwords.
+Stopwords are commonly used words in a language that are considered to have little or no significance in determining the meaning of a text.
+`not' is not a stopword, because it might indicate the opposite sentiment.
+
+We also applied Stemming that reduces words to their root forms. It minimizes the confusion around words that have similar meanings and lowers the complexity of the input space. However, it comes at the cost of throwing information away.
+
+For example:
+\begin{verbatim}
+J'avais peur que les extensions s'éssouflent à terme...
+->
+['peur', 'extens', 'éssouflent', 'term']
+\end{verbatim}
+
+\subsection{One Hot Encoding}
+
+One Hot Encoding is a vector representation of a word in vocabulary, ie the unique list of all the words appearing in the documents.
+If the vocabulary size is n, each word in the vocabulary is therefore represented as a vector of size n. It takes binary values: 1 for the corresponding word and 0 otherwise.
+
+\paragraph{On the implementation:}
+
+We can represent the set of sentences as a tensor of shape (a, b, c) ie a matrices (number of sentences) of shape (b,c) where b represents the number of words in the sentence and c the vocabulary size.
+
+\paragraph{Advantages:}
+
+\begin{itemize}
+  \item Intuitive and easy to implement
+\end{itemize}
+
+\paragraph{Inconvenients:}
+
+\begin{itemize}
+  \item Increase in dimensionality: a large vocabulary size implies a large number of columns, taking more memory size, which results in an increase in computational cost. + The matrix is sparse.
+  \item Every vector sits in the orthogonal vector space so vectors are perpendicular to each other and are considered independent to each other, which is rarely the case.
+  \item High chance of multi-collinearity due to dummy variables, which might affect the performance of the model (cf. Dummy Variable Trap)
+\end{itemize}
+
+\subsection{Bag of Words}
+
+The Bag of Words (BoW) technique is a commonly used method for representing text data in natural language processing. It treats each document or sentence as a collection of words without considering the order or grammar, focusing only on the frequency of words. BoW represents text data as a sparse matrix, where each row corresponds to a document or sentence, and each column represents a unique word in the vocabulary.
+
+\paragraph{Implementation Details}
+
+In the BoW representation, the set of sentences is transformed into a matrix, where each row corresponds to a document or sentence, and each column represents a unique word in the vocabulary. The value in each cell of the matrix indicates the frequency or occurrence of the corresponding word in the document.
+
+\paragraph{Advantages}
+
+\begin{itemize}
+\item \textbf{Intuitive and easy to implement}: The BoW technique provides a straightforward representation of text data, where words are treated as independent features, and their frequencies capture some information about the documents.
+\end{itemize}
+
+\paragraph{Disadvantages}
+
+\begin{itemize}
+\item \textbf{Increase in dimensionality}: One drawback of the BoW technique is the increase in dimensionality. As the vocabulary size grows, the number of columns in the matrix increases, occupying more memory space and resulting in higher computational costs. Additionally, the resulting matrix is sparse, containing mostly zeros.
+\item \textbf{Loss of word order and grammar}: By disregarding the order and grammar of words, the BoW technique may lose important linguistic information present in the text data.
+\item \textbf{Lack of semantic meaning}: BoW representation treats each word independently, ignoring the semantic relationships between words, which can limit its ability to capture the meaning and context of the text.
+\end{itemize}
+
+
+\subsection{tf-idf}
+
+The BoW (Bag of Words) model assumes that the importance of a term is directly proportional to
+the number of its appearance in the document, this can easily be misleading
+when the most common words are `stopwords'. (But it really depends on
+the algorithm that we are going to use afterwards, if we do perceptron, it wouldn't matter.)
+
+But the BoW gives vectors with integer features, which may be favorable by some algorithm,
+like Naive Bayes below. This being said, the tf-idf embedding gives vectors with features in $\mathbb{Q}$,
+which can be dilated to integers.
+
+tf-idf (term frequency - inverse document frequency) first considers
+the whole of a corpus\footnote{For the terminology, we call the set of comments a corpus,
+each comment a document, every word a term.}, it assumes a term too frequent in the corpus has little
+information. Then it considers the importance of a term in a document
+as the frequency of the term in this document times a scalar
+representing its information in the corpus. The idf is actually an estimation
+of Shannon information of a term.
+
+$$
+\begin{aligned}
+\mathrm{tfidf}(\mathrm{term}) & = \mathrm{tf}(\mathrm{term}) \times \mathrm{idf}(\mathrm{term}) \\
+\mathrm{tf}(\mathrm{term}) & = \frac{\# \text { of times term appears in document }}{\# \text { of terms in document }} \\
+\mathrm{idf}(\mathrm{term}) & =\ln \left(\frac{\# \text { of documents }}{\# \text { of documents in corpus with term }}\right)
+\end{aligned}
+$$
+
+Other possible choices:
+
+\begin{itemize}
+  \item A term can be many (succesive) words (n-gram) (e.g. to
+  take into account of negations before a word)
+  \item The exact formulae can be changed while the same idea remains
+\end{itemize}
+
+\paragraph{On the implementation} \verb|for| is slow in python, do use
+functions in numpy instead; we use sparse matrix as data structure to
+gain memory and boost speed sometimes.
+
+\paragraph{Observations}
+\begin{itemize}
+  \item Preprocessing is important to reduce the dimention
+\end{itemize}
+
+\section{Classification}
+
+\subsection{Naive Bayes}
+
+The Naive Bayes algorithm do not require text representations such as one-hot encoding. It instead utilizes count vectorization to represent documents. Count vectorization preserves the word frequencies, allowing the algorithm to consider the importance of words in expressing sentiment.
+
+Naive Bayes is a probabilistic classification algorithm.
+It is called naive because it assumes that each input variable is independent.
+
+We are looking for:
+
+$$ \max_{y}\mathbb{P}(Y =y \mid X=(x_1, ..., x_n)) $$
+
+using the Naive Bayes formula: $\mathbb{P}(Y \mid X) = \frac{\mathbb{P}(X\mid Y)\cdot \mathbb{P}(Y)}{\mathbb{P}(X)} = \frac{\mathbb{P}(Y)\prod_{i}^{}\mathbb{P}(X_i\mid Y)}{\mathbb{P}(X)}$
+by independence,
+where $\mathbb{P}(X\mid Y)$ is the likelihood, $\mathbb{P}(X)$ is the evidence, $\mathbb{P}(Y \mid X)$ is the posterior and $\mathbb{P}(Y)$ is the prior.
+
+More precisely, we used Multinomial Naive Bayes for our task because it is suitable for discrete and count-based features, such as word frequencies in text data. The count vectorization of word aligns well with the assumptions of this model. It allows the model to estimate the probability of sentiment classes based on the frequency distribution of words.
+
+\paragraph{Advantages} \begin{itemize}
+\item Even though the independence assumption is rarely true, the model is still effective
+\item Handles high dimensional data well
+\end{itemize}
+
+\paragraph{Inconvenients} \begin{itemize}
+\item Estimated probability is often inaccurate because of the naive assumption
+\end{itemize}
+
+\subsection{Distances}
+
+Before introducing the k-nearest neighbors algorithm,
+it is important to note first that the distances to mesure the similarities between documents we use for the algorithms are vital.
+
+We can use euclidean distance, or we can use the distance concerning
+only the angle between 2 vectors (so the `difference of lengths' of documents
+is ignored).
+
+\begin{minipage}{\textwidth}
+\begin{minipage}{0.49\textwidth}
+$$
+\begin{aligned}
+&\text{(cosine similarity)}S(u, v) :=
+\cos (\theta)=\frac{u \cdot v}{\|u\|\|v\|}\\
+&\text{(cosine distance)}D(u, v) :=1-S(u, v)
+\end{aligned}
+$$
+\end{minipage}
+\centering
+\begin{minipage}{0.49\textwidth}
+\input{dist.tex}
+\end{minipage}
+\end{minipage}
+
+We see that cosine distance is better in nlp : no curse of dimensionality (the euclidean
+distance tends to be the same to every pair of vectors when the dimension grows).
+
+\subsection{K-Nearest neighbours}
+\label{subset:KNN}
+
+\paragraph{Algorithm} One predicts the information associated with a vector by the majority
+of information associated with its neighbours (within k nearest).
+We use tf-idf embedding here.
+By simple experience
+and raisonning (the length doesn't affect the positivity) as well, we chose cosine distance.
+
+For comments of grades 4 - 7, they are more or less neutral, we can't
+say if it is definitely positive or negative as human-being, so less chance
+for our more or less naïve algorithm. For this reason we chose
+to do our algorithm on comments of extremities.
+
+We add a parameter to our algorithm: \textbf{balance}.
+balance is a float >= 1 meaning that we trim the list of data of one label
+of more quantity to size = balance$\times$(number of data with another label).
+This is to solve the problem of disporpotional labelled data.
+
+\paragraph{On the implementation} \begin{itemize}
+  \item We favor the nearer information when there is a tie.
+  \item Python is not a well typed language, it is so easy to have
+  ridiculous bugs.
+  \item Cosine distance works much better than euclidean distance.
+  \item When the data is disporpotionally labelled, we need to balance the data to ensure performance for prediction of each label.
+  \item We sometime use implemented fonctions to improve
+  efficacity after having understood the method and
+  implemented ourselves.
+\end{itemize}
+
+\paragraph{Positive} \begin{itemize}
+  \item Easy to implement
+\end{itemize}
+
+\paragraph{Negative} \begin{itemize}
+  \item Supervised
+  \item $\Theta(n)$ for each prediction ($n$ the size of training data), which is
+  very slow when we want to use a big training data to ensure better prediction.
+\end{itemize}
+
+\section{Evaluation of models - Results}
+
+\subsection{Model evaluation}
+
+First of all, the split the labeled dataset into training and testing subsets. The model is trained on the training data and then evaluated on the testing data to measure its performance, in order to assess its capacity to generalize predictions to unknown data.
+
+Then, we used cross-validation for each model. It divides the data into parts, trains the model on some parts, and tests it on others. This process is repeated multiple times to get a reliable performance estimate. Cross-validation helps us understand how well the model works on unseen data and allows us to find the best settings for the model.
+
+As mentioned earlier, the positive and negative classes are somehow imbalanced. Data stratification would be here inappropriate because the minority class will get underrepresented, since it has fewer samples.
+Therefore, given the size of the dataset, an option would be to undersample the positive class: we train models with on data that has the same proportion of positive and negative classes.
+
+Finally, the metrics we used are standard classification metrics such as precision, recall and F1 score.
+Precision measures the accuracy of positive predictions. Recall measures the ability of the model to identify positive instances correctly. F1-score is a metric that combines precision and recall scores.
+
+\paragraph{On implementation} We enable to specify random seed to ensure reproductivity.
+
+\subsection{K-Nearest neighbors}
+
+To begin with, we delibrately balanced the data, 50\% of positive comments (5000)
+and 50\% of negative comments (5000).
+
+By adjusting the $k$, we obtained such result shown in Figure~\ref{fig:KNN1}.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+      \begin{axis}[
+          xlabel={\textbf{k}},
+          ylabel={\textbf{Accuracy}},
+          xmin=0, xmax=2100,
+          ymin=0.6, ymax=1,
+          xtick={0,1000,2000,3000,4000,5000},
+          ytick={0.6,0.7,0.8,0.9,1},
+          legend pos=north west,
+          grid=both,
+          grid style={line width=0.2pt, draw=gray!30},
+          major grid style={line width=0.4pt,draw=gray!60},
+          height=8cm,
+      ]
+      \addplot[color=blue, mark=*] coordinates {
+          (5,0.7606)
+          (55,0.8522)
+          (500,0.857)
+          (1000,0.8332)
+          (2000,0.7932)
+      };
+      \addplot[color=red, mark=square] coordinates {
+          (5,0.691)
+          (55,0.7964)
+          (500,0.857)
+          (1000,0.8836)
+          (2000,0.908)
+      };
+      \legend{Negative Comments, Positive Comments}
+      \end{axis}
+  \end{tikzpicture}
+  \caption{k nearest neighbor on balanced data}
+  \label{fig:KNN1}
+\end{figure}
+
+That was some good results. But in the reality, our data is extremely disporpotional,
+if we apply KNN directly, the algorithm would predict positive almost everytime. (Although
+a positive comment has less chance to enter the neighbourhood of a negtive comment,
+there are too many of them.) Indeed, we tried and get 0.26 as accuracy for negative comments and 0.94 for
+positive comments.
+
+The accuracy in total (on the data set) was good but it was not what we are after. We would like
+$(r_p+r_n)/2$ to be big (so in the previous case it was 0.6). $r_{p/n}$ is the accuracy on the positive/negative comments.
+
+To solve this problem, we use our \textbf{balance} parameter introduced before.
+
+As the Figure~\ref{fig:balancenk} shows, the balance value would
+better stay at 1 (otherwise it damages significantly
+the accuracy on the negatives) and we increase k to
+remedy the disadvantage of positive prediction.
+
+Where does this disadvantage come from, while the number
+of positives and negatives are equal in the training data (after trimming).
+A conjecture of mine is that, the number of positive comments in the test data
+is significantly less than that of the training data so
+some vocabularies are not present in the training data. In this case,
+we can only judge by more basic words and rely on bigger survey, thus increasing k helps.
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[t]{0.33\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{balancek5.png}
+    \caption{k=5}
+  \end{subfigure}%
+  \hfill
+  \begin{subfigure}[t]{0.33\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{balancek50.png}
+    \caption{k=50}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.33\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{balancek500.png}
+    \caption{k=500}
+  \end{subfigure}
+  \caption{Positive comments are labelled as true and negative comments are labelled as false}
+  \label{fig:balancenk}
+\end{figure}
+
+Now we show a case in reality, our assumption/scenario is that :
+
+The given data on the games is disproportional. Most comments are
+positive. So positive comments do not give much information.
+The manager then wants to detect then inspect all the negative comments
+among all the comments.
+
+Our KNN (with parameters balance=1, k=500 as explained in \ref{subset:KNN}) does this job.
+So as shown in Table~\ref{tab:KNN}, we almost covered all negative comments,
+the payoff is that the precision of class false is low, meaning
+that the manager needs to see as much as 5 comments to read a true negative
+comment.
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{ccccc}
+  \hline
+  Class & Precision & Recall & F1-Score & Support \\
+  \hline
+  False (negative comments) & 0.23 & 0.91 & 0.37 & 1789 \\
+  True (positive comments) & 0.99 & 0.76 & 0.86 & 22520 \\
+  \hline
+  Macro Avg & 0.61 & 0.83 & 0.61 & 24309 \\
+  Weighted Avg & 0.93 & 0.77 & 0.82 & 24309 \\
+  \hline
+  \multicolumn{5}{c}{Accuracy = 0.77} \\
+  \hline
+  \end{tabular}
+  \caption{Classification report with undersampling; note that
+  we have a smaller support here for KNN than naive bayes,
+  this is because of the efficacity problem.}
+  \label{tab:KNN}
+\end{table}
+
+\subsection{Naive Bayes}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{ccccc}
+  \hline
+  Class & Precision & Recall & F1-Score & Support \\
+  \hline
+  False (negative comments) & 0.73 & 0.28 & 0.41 & 6801 \\
+  True (positive comments) & 0.89 & 0.98 & 0.93 & 39941 \\
+  \hline
+  Macro Avg & 0.81 & 0.63 & 0.67 & 46742 \\
+  Weighted Avg & 0.87 & 0.88 & 0.86 & 46742 \\
+  \hline
+  \multicolumn{5}{c}{Accuracy = 0.88} \\
+  \hline
+  \end{tabular}
+  \caption{Classification report with no undersampling}
+  \label{tab:KNN}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{ccccc}
+  \hline
+  Class & Precision & Recall & F1-Score & Support \\
+  \hline
+  False (negative comments) & 0.35 & 0.89 & 0.50 & 6784 \\
+  True (positive comments) & 0.98 & 0.71 & 0.82 & 39958 \\
+  \hline
+  Macro Avg & 0.66 & 0.80 & 0.66 & 46742 \\
+  Weighted Avg & 0.88 & 0.74 & 0.78 & 46742 \\
+  \hline
+  \multicolumn{5}{c}{Accuracy = 0.74} \\
+  \hline
+  \end{tabular}
+  \caption{Classification report with undersampling}
+  \label{tab:classification_report}
+\end{table}
+
+We notice that without undersampling, the F1 score is very high for the positive class but it is low for the negative. The model is biased towards predicting positive sentiment, leading to a higher number of false negatives. 
+However, with undersampling, the F1-score is lower for the positive class but it as at least balanced with the negative class. As accuracy is not really relevant in the case of class imbalance, it is probably more appropriate to keep the second model with undersampling.
+
+We are diving into the training phase with looking at learning curves. This is giving us an idea on how well the model generalizes to testing data.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=7cm]{nb_start_learning_curves.png}
+  \caption{Learning curves for Multinomial NB with undersampling (with training size in thousands)}
+  \label{fig:image_label}
+\end{figure}
+
+We can see that the training F1-score is a bit larger than the testing F1-score, which was expected since the model training is done on the training set. We can see that the validation F1-score keeps on decreasing until the end of the training. This means we should have probably trained it for longer. The recall is better, but using undersampling do not provide enough data for the validation score to be optimal in this case.
+
+\section{Insights - Analysis}
+
+\subsection{Challenges encountered}
+
+The most challenging task was to process data since the dataset is very large. We realized how efficient libraries are, since their computation time is low compared to when we implement it all by hand.
+The implementations are optimized, and the computations are designed for performance. Moreover, libraries such as the ones from sklearn take advantage of parallel computing (executed on multi-core processors). 
+
+Another challenge encountered is that it was not obvious at first how to apply preprocessing. Indeed, we had to think about how much we wanted to remove stopwords or common words. Removing these words might simplify the model, but we might also lose information with it. Another example is the use of negative contractions. It was not obvious if they could have a significant impact or not.
+
+A common obstacle with NLP is that sentences are far from being perfect, even after preprocessing is applied. Sentiment classifiers can also struggle when encountering words or phrases that were not present in the training data, so that's why using word embeddings are useful to generalize to unknown terms. 
+
+\subsection{Lessons learned}
+
+The importance of preprocessing is a first lesson we could remember from this project. Indeed, without preprocessing, making a mathematical representation of words does not make any sense since the word embedding space will have a very large dimension, thus making predictions almost impossible.
+
+Then, handling class imbalance. It is easy to classify reviews as positive when the majority of reviews in the training data are positive. Undersampling was a good solution to this problem (with the tradeoff that we lose some precision in prediction). 
+
+\subsection{Limitations and areas of improvement}
+
+Sentiment is subjective, and annotating large datasets with sentiment labels can be challenging due to varying interpretations. Consequently, different customers might assign different sentiment scores, leading to inconsistencies in the training and evaluation data. Additionally, sentiment analysis can be dependent on the context, making it challenging to capture the nuances and sarcasm present in text. 
+
+Another challenge is the domain adaptation problem, because our model is trained on one domain and may struggle to generalize well to other domains due to differences in language usage and sentiment expressions.
+
+We could evaluate the ability of our model to generalize to reviews from other fields (such as movies reviews) and see if it can transfer its knowledge pretty well or not.
+
+Finally, the models we used to represent text data were not sequential for the most part, instead it focused on the words themselves. An option would be to use Deep Learning models such as recurrent neural networks (RNNs), long short-term memory (LSTM) networks, or transformer-based architectures (e.g., BERT, GPT). These models can capture complex linguistic patterns and contextual information. 
+
+\input{tda.tex}
+
+\section{Outro}
+
+Through out the project we learnt how text representation is important for computer to process natural language and different
+representations adapt to different tasks. Moreover we improved our ability to write a good report
+and present a project. All thanks to professor Olivier Schwander.
+
+\printbibliography
+
+\end{document}

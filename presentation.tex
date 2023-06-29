@@ -1,0 +1,556 @@
+\documentclass{beamer}
+
+\setbeamertemplate{itemize/enumerate body begin}{\small\setlength{\itemsep}{12pt}}
+\setlength{\itemsep}{4pt}
+% \setbeamerspace{5pt}
+\usepackage{mathtools}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{physics}
+\usepackage{stmaryrd}
+\usepackage{bbm}
+\usepackage{graphicx}
+\usepackage{adjustbox}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{angles, quotes}
+\usetikzlibrary{calc}
+\usepackage{pgfplots}
+\usepackage{subcaption}
+\usepackage{graphicx}
+\usepackage{parskip}
+\usepackage{mdframed}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    }
+\usepackage{biblatex}
+\addbibresource{refs.bib}
+\title{Représentations textuelles et plongements sémantiques : une application pour l'analyse de sentiment}
+\author{MARIE Clément, SAMAHA Elio, XIA Tianxiang 
+Encadré par Mr. Olivier Schwander}
+\date{\today}
+
+\setbeamertemplate{frametitle}{%
+  \vspace{-1em}
+  \insertframetitle\par
+  \vspace{-0.5em}
+}
+
+
+\beamertemplatenavigationsymbolsempty
+\setbeamertemplate{footline}{%
+  \raisebox{1em}[0pt][0pt]{%
+    \hspace*{-1em}% <-- Adjust the horizontal position here
+    \begin{beamercolorbox}[wd=\paperwidth,ht=2.25ex,dp=1ex,right]{page number in head/foot}%
+      \usebeamerfont{page number in head/foot}%
+      \hspace*{2ex}\insertframenumber\,/\,\inserttotalframenumber%
+    \end{beamercolorbox}%
+  }%
+}
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}
+    \tableofcontents
+\end{frame}
+\section{Introduction}
+\begin{frame}
+\frametitle{Introduction - Motivation}
+
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=north east,inner sep=0pt] at (current page.north east) {\includegraphics[width=7cm]{tric_trac_pic.png}};
+\end{tikzpicture}
+
+\vspace{1cm}
+
+\begin{itemize}
+  \item Site web Tric Trac: site communautaire autour des jeux de société
+  \item Collecte d'avis et de notes des utilisateurs sur les jeux
+  \item Traitement de données par représentation vectorielle de mots: analyse multidimensionnelle 
+  \item Applications d'algorithmes de classification et évaluation des performances
+  \item Enjeux pour l'entreprise   
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Analyse descriptive des notes: anticipation du problème}
+
+\centering
+\includegraphics[width=6cm]{hist_plot_count.png}
+
+\begin{itemize}
+  \item Tendance positive des notes: déséquilibre de classes
+  \item Objectif: harmoniser la répresentation positive/négative
+  \item Adapter en conséquence les métriques d'évaluation 
+\end{itemize}
+\end{frame}
+
+\section{Representations and algorithms}
+
+\begin{frame}
+\frametitle{Représentation vectorielle des documents}
+\begin{itemize}
+    \item Besoin d'une répresentation numérique: structurée et quantifiable 
+    \item Prétraitement (ponctuation, Stemming, stopwords, etc.)
+\end{itemize}
+
+\begin{figure}
+    \begin{minipage}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{bag_words.jpeg} 
+        \caption{Bag of words}
+    \end{minipage}
+    \begin{minipage}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{ohe.png}
+        \caption{One Hot Encoding}
+    \end{minipage}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{Représentation vectorielle des documents}
+\begin{itemize}
+    \item Besoin d'une répresentation numérique: structurée et quantifiable 
+    \item Prétraitement (ponctuation, Stemming, stopwords, etc.)
+\end{itemize}
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{puppy.pdf}
+\end{figure}
+\end{frame}
+
+\frame{\frametitle{\textbf{Sac de Mots (Bag of Words)}}
+\framesubtitle{\textbf{Définition, Vectorisation, Avantages et Inconvénients}}
+
+
+\begin{itemize}
+  \item \textbf{Sac de Mots (BoW)} représente un document comme une collection de ses mots constitutifs, ignorant la grammaire et l'ordre des mots.
+  \item {Exemple}:
+  \begin{itemize}
+    \item Phrase 1: "Le chat dort sur le chat."
+    \item Phrase 2: "Le chien saute."
+  \end{itemize}
+\end{itemize}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+  \hline
+  & \textbf{chat} & \textbf{chien} & \textbf{dort} & \textbf{saute} \\
+  \hline
+  \textbf{Phrase 1} & 2 & 0 & 1 & 0 \\
+  \hline
+  \textbf{Phrase 2} & 0 & 1 & 0 & 1 \\
+  \hline
+\end{tabular}
+\end{center}
+
+\begin{itemize}
+  \item \textbf{Avantages}:
+  \begin{itemize}
+    \item Simple et facile à implémenter.
+    \item Préserve la signification sémantique des mots dans le document.
+  \end{itemize}
+  \item \textbf{Inconvénients}:
+  \begin{itemize}
+    \item Ignore la grammaire et l'ordre des mots, entraînant une perte d'informations contextuelles.
+    \item Augmente la dimensionnalité et la parcimonie de la représentation vectorielle.
+  \end{itemize}
+\end{itemize}
+
+}
+
+\frame{\frametitle{K-Nearest Neighbors (KNN)}
+\framesubtitle{Advantages, Disadvantages, and Illustration}
+
+\textbf{Advantages:}
+\begin{itemize}
+  \item Simple and easy to implement.
+  \item Non-parametric method.
+  \item Suitable for both classification and regression tasks.
+\end{itemize}
+
+\textbf{Disadvantages:}
+\begin{itemize}
+  \item Computationally expensive for large datasets.
+  \item Sensitive to the choice of k and distance metric.
+  \item Performs poorly with high-dimensional data.
+\end{itemize}
+
+\begin{center}
+\begin{tikzpicture}
+    % Blue points
+    \foreach \point in {(1.2,0.8), (1.8,1.2), (0.9,1.6), (1.4,1)} {
+        \fill[blue] \point circle (2pt);
+    }
+    
+    % Red points
+    \foreach \point in {(2,2.2), (2.6,2.5), (2.3,2.7), (3,2.9), (2.8,2.2)} {
+        \fill[red] \point circle (2pt);
+    }
+
+    % Black point (test subject)
+    \fill[black] (1.6,1.5) circle (2pt);
+    
+    % Axis labels
+    \node at (3.6,0) {{\textbf{Feature1}}};
+    \node at (0,3.2) {{\textbf{Feature2}}};
+    
+    % Axis ticks
+    \draw (0.5,0.1) -- (0.5,-0.1) node[below] {\tiny{0.5}};
+    \draw (1,0.1) -- (1,-0.1) node[below] {\tiny{1}};
+    \draw (1.5,0.1) -- (1.5,-0.1) node[below] {\tiny{1.5}};
+    \draw (2,0.1) -- (2,-0.1) node[below] {\tiny{2}};
+    \draw (2.5,0.1) -- (2.5,-0.1) node[below] {\tiny{2.5}};
+    
+    \draw (0.1,0.5) -- (-0.1,0.5) node[left] {\tiny{0.5}};
+    \draw (0.1,1) -- (-0.1,1) node[left] {\tiny{1}};
+    \draw (0.1,1.5) -- (-0.1,1.5) node[left] {\tiny{1.5}};
+    \draw (0.1,2) -- (-0.1,2) node[left] {\tiny{2}};
+    \draw (0.1,2.5) -- (-0.1,2.5) node[left] {\tiny{2.5}};
+\end{tikzpicture}
+\end{center}
+}
+
+\frame{\frametitle{K-Plus Proches Voisins (KPP ou KNN)}
+\framesubtitle{Avantages, Inconvénients et Illustration}
+
+\small
+\textbf{Avantages :}
+\begin{itemize}
+  \item Simple et facile à implémenter.
+  \item Méthode non paramétrique.
+  \item Convient à la fois pour les tâches de classification et de régression.
+\end{itemize}
+
+\textbf{Inconvénients :}
+\begin{itemize}
+  \item Coûteux en calcul pour les grands ensembles de données.
+  \item Sensible au choix de k et de la métrique de distance.
+  \item Performances médiocres avec des données de grande dimension.
+\end{itemize}
+
+\begin{center}
+\begin{tikzpicture}
+    % Points bleus
+    \foreach \point in {(0.9,0.6), (1.35,0.9), (0.675,1.2), (1.05,0.75)} {
+        \fill[blue] \point circle (2pt);
+    }
+    
+    % Points rouges
+    \foreach \point in {(1.5,1.65), (1.95,1.875), (1.725,2.025), (2.25,2.175), (2.1,1.65)} {
+        \fill[red] \point circle (2pt);
+    }
+
+    % Point noir (sujet test)
+    \fill[black] (1.2,1.125) circle (2pt);
+    
+    % Étiquettes des axes
+    \node at (3.6,0) {{\textbf{Caractéristique1}}};
+    \node at (0,2.4) {{\textbf{Caractéristique2}}};
+    
+    % Graduations des axes
+    \draw (0.375,0.1) -- (0.375,-0.1) node[below] {\tiny{0.5}};
+    \draw (0.75,0.1) -- (0.75,-0.1) node[below] {\tiny{1}};
+    \draw (1.125,0.1) -- (1.125,-0.1) node[below] {\tiny{1.5}};
+    \draw (1.5,0.1) -- (1.5,-0.1) node[below] {\tiny{2}};
+    \draw (1.875,0.1) -- (1.875,-0.1) node[below] {\tiny{2.5}};
+    
+    \draw (0.1,0.375) -- (-0.1,0.375) node[left] {\tiny{0.5}};
+    \draw (0.1,0.75) -- (-0.1,0.75) node[left] {\tiny{1}};
+    \draw (0.1,1.125) -- (-0.1,1.125) node[left] {\tiny{1.5}};
+    \draw (0.1,1.5) -- (-0.1,1.5) node[left] {\tiny{2}};
+    \draw (0.1,1.875) -- (-0.1,1.875) node[left] {\tiny{2.5}};
+\end{tikzpicture}
+\end{center}
+}
+
+
+
+\begin{frame}{KNN Analysis (1)}
+    
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\textwidth]{balancek5.png}
+    \hspace{0.5cm}
+    \includegraphics[width=0.4\textwidth]{balancek50.png}
+    \vspace{0.5cm}
+    \includegraphics[width=0.4\textwidth]{balancek500.png}
+    \caption{Positive comments are labeled as true and negative comments are labeled as false for different values of k}
+    \label{fig:balancenk}
+\end{figure}
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{KNN Analysis (2)}
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}
+      \begin{axis}[
+          xlabel={\textbf{k}},
+          ylabel={\textbf{Accuracy}},
+          xmin=0, xmax=2100,
+          ymin=0.6, ymax=1,
+          xtick={0,1000,2000,3000,4000,5000},
+          ytick={0.6,0.7,0.8,0.9,1},
+          legend style={at={(0.5,-0.2)}, anchor=north},
+          grid=both,
+          grid style={line width=0.2pt, draw=gray!30},
+          major grid style={line width=0.4pt,draw=gray!60},
+          height=4.5cm,
+          width=0.8\textwidth
+      ]
+      \addplot[color=blue, mark=*] coordinates {
+          (5,0.7606)
+          (55,0.8522)
+          (500,0.857)
+          (1000,0.8332)
+          (2000,0.7932)
+      };
+      \addplot[color=red, mark=square] coordinates {
+          (5,0.691)
+          (55,0.7964)
+          (500,0.857)
+          (1000,0.8836)
+          (2000,0.908)
+      };
+      \legend{Negative Comments, Positive Comments}
+      \end{axis}
+  \end{tikzpicture}
+  \caption{k nearest neighbor on balanced data}
+  \label{fig:KNN1}
+\end{figure}
+
+\vspace{-0.8cm} % Adjust vertical space here
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{@{}ccccc@{}}
+  \hline
+  Class & Precision & Recall & F1-Score & Support \\
+  \hline
+  False (negative comments) & 0.23 & 0.91 & 0.37 & 1789 \\
+  True (positive comments) & 0.99 & 0.76 & 0.86 & 22520 \\
+  \hline
+  \multicolumn{5}{c}{Accuracy = 0.77} \\
+  \hline
+  \end{tabular}
+  \caption{Classification report with undersampling}
+  \label{tab:KNN}
+\end{table}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{KNN Analysis with Different Options}
+
+\begin{figure}[h]
+  \centering
+  \begin{tabular}{|c|c|c|c|}
+  \hline
+  & \textbf{BoW} & \textbf{tf-idf} & \textbf{One-hot} \\ \hline
+  \textbf{Euclidean} & 0.7642 (1) & 0.7425 (113) & 0.6864 (5) \\ \hline
+  \textbf{Cosine} &  0.7725 (1) & 0.7771 (1) & 0.6864 (5) \\ \hline
+  \end{tabular}
+  \caption{Comparative Accuracy Results, (k)}
+  \label{tab:accuracy}
+\end{figure}
+
+\vspace{-0.5cm} % Adjust vertical space here
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=7cm]{accuracy_plot.png}
+  \vspace{-0.2cm} % Adjust vertical space here
+  \caption{Variation of accuracy with k (KNN, euclidean distance, BoW)}
+  \label{fig:KNNOptions}
+\end{figure}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Naive Bayes}
+\begin{itemize}
+    \item CountVectorizer: décompte des occurrences de mots dans le corpus
+    \item Algorithme de classification probabiliste
+    \item Naif car suppose que les variables sont indépendantes
+    \item Probabilités conditionnelles par classe
+    \item Classification où la classe prédite maximise la probabilité
+\end{itemize}
+
+\begin{figure}
+    \begin{minipage}[b]{0.60\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{nb.png} 
+        \caption{Théorème de Bayes}
+    \end{minipage}
+\end{figure}
+\end{frame}
+
+\section{Results}
+\begin{frame}{Naive Bayes - Metrics}
+
+\begin{figure}[H]
+    \begin{minipage}[c]{0.49\textwidth}
+        \includegraphics[width=5cm]{nb_mat_no_undersampling.png} 
+        \subcaption{Pas d'undersampling}
+    \end{minipage}
+    \begin{minipage}[c]{0.49\textwidth}
+        \includegraphics[width=5cm]{nb_mat_undersampling.png}
+        \subcaption{Undersampling}
+    \end{minipage}
+    \caption{Matrices de confusion et métriques associées}
+\end{figure}
+
+\begin{table}
+\centering
+\resizebox{0.6\textwidth}{!}{
+\begin{tabular}{cccc}
+  & F1 Pos. & F1 Neg. & Accuracy \\
+  \hline
+  Undersampling & 0.83 & 0.50 & 0.74 \\
+  No undersampling & 0.93 & 0.40 & 0.88 \\
+\end{tabular}
+}
+\caption{Metrics}
+\label{subfig:scores}
+\end{table}
+\end{frame}
+
+\section{Persistent homology}
+
+\begin{frame}{Motivation}
+\begin{itemize}
+    \item Ignored the structure of sentences
+in a document;
+    \item A parameter of scale (KNN).
+\end{itemize}
+For the sentiment prediction, it is fine. So we change our task 
+where we actually need to solve these problems.
+
+We want to analyze the richness of structures in a discursive essay.
+\end{frame}
+
+\begin{frame}{Introduction}
+\begin{figure}[H]
+  \begin{minipage}{0.49\textwidth}
+  \scalebox{0.45}{\input{apple.tex}}
+  \end{minipage}
+  \begin{minipage}{0.49\textwidth}
+  $\cdots$I like apple. It is healthy. It is yummy. So I eat an apple every day.
+  $\cdots$
+  \end{minipage}
+  \caption{There are 2 holes in this simplicial complex,
+  one represented by the blue cycle and one by brown.
+  Note that the brown cycle and the green cycle are homology equivalent, so they count as one.}
+  \label{apple}
+\end{figure}
+\begin{figure}[H]
+\centering
+\begin{minipage}[c]{0.77\textwidth}
+\includegraphics[width=8cm]{scale.png}
+\end{minipage}\hfill
+\begin{minipage}{0.2\textwidth}
+\caption{Structure changes with scale}
+\end{minipage}
+\end{figure}
+\end{frame}
+
+\begin{frame}{The algorithm}
+We vary $d$ (a threshold of the difference) from $0$ to $1$, for every $d$ we create a graph like the figure before \ref{apple}
+(points representing sentences are linked first in order in the essay,
+then we link sentences whose differences are lower than $d$,
+we fill triangles, tetrahedrons, etc. ). We then get an inclusion of graphs where holes appear and disappear. We count the number of appearances of holes as a measure of the richness of structures of an essay.
+\begin{figure}[H]
+\centering
+\input{filtration.tex}
+\caption{We continue linking and filling (e.g.\ triangles) when the $d$ increases; note that
+we may have multiple linkings and fillings to do within some same $d$ but we discretize these
+for the algorithm}
+\label{filtration}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Analysis on a real set of data}
+data source (more precisely, the essay set 2, which is discursive) :
+\fontsize{7pt}{8pt}\selectfont
+\url{https://www.kaggle.com/datasets/thevirusx3/automated-essay-scoring-dataset/code?select=training_set_rel3.tsv}
+\begin{figure}[H]
+\begin{minipage}{0.49\linewidth}
+\includegraphics[width=4cm]{pdessay.png}
+\end{minipage}
+\begin{minipage}{0.49\linewidth}
+\begin{mdframed}
+In @DATE1's world, there are many things found offensive.  Everyone has their own opinion on what is offensive and what is not. Many parents are becoming upset because they think their children are viewing things that they should not.  Other people are upset because they think the libraries are offending their culture or way of life.  This is even taken to the extreme where people want censhorship on libraries to avoid this, which is wrong.     Some people are becoming concerned about the materials in libraries...($\sim$450 words)
+\end{mdframed}
+\end{minipage}
+\caption{The persistence diagram of an essay of grade 4/6 : A blue point $(x, y)$ in this diagram means
+that there is a hole appears at $d=x$ and disappears at $d=y$.
+One red point means there is only one connected component the whole time,
+because we link all the sentences by order in the essay.
+}
+\label{fig:pd}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+\begin{figure}[H]
+  \includegraphics[width=5cm]{gradesah1s.png}
+  \includegraphics[width=5cm]{gradesah1w.png}
+  \caption{The average of barcodes each sentence/word increases as grade increases (from 1 to 6, upper to lower histogram)}
+  \label{fig:ads}
+\end{figure}
+\begin{figure}[H]
+\begin{minipage}[c]{0.67\textwidth}
+\scalebox{0.45}{\input{ah1tables_pre.tex}}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.3\textwidth}
+\caption{Grades and averages of number of barcodes within fixed word number ranges}
+\end{minipage}\hfill
+\end{figure}
+
+\end{frame}
+
+\section{Outro}
+\begin{frame}
+\frametitle{Analyse - Conclusions}
+
+\begin{columns}
+
+\begin{column}{0.6\textwidth}
+\textbf{Défis rencontrés :}
+\begin{itemize}
+\item Gérer un grand jeu de données
+\item Décisions sur le prétraitement
+\end{itemize}
+
+\textbf{Leçons apprises :}
+\begin{itemize}
+\item Le prétraitement est crucial
+\item Importance de la gestion du déséquilibre des classes
+\end{itemize}
+
+\textbf{Limitations et améliorations :}
+\begin{itemize}
+\item Gérer les sentiments subjectifs
+\item Défis de l'adaptation au domaine
+\item Exploration de modèles de Deep Learning
+\end{itemize}
+
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\includegraphics[width=1\textwidth]{img_neural_networks.jpg}
+\end{column}
+
+\end{columns}
+
+\end{frame}
+
+\end{document}
